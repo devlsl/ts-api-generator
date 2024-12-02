@@ -1,6 +1,6 @@
 {
     "name": "ts-api-generator",
-    "version": "1.0.30",
+    "version": "1.0.31",
     "main": "./dist/cjs/index.js",
     "module": "./dist/esm/index.js",
     "types": "./dist/types/index.d.ts",
@@ -16,7 +16,8 @@
         "build:types": "tsc -p ./tsconfig.types.json",
         "build:esm": "tsc -p ./tsconfig.esm.json",
         "build:cjs": "tsc -p ./tsconfig.cjs.json",
-        "clear": "rm -rf dist/*"
+        "clear": "rm -rf dist/*",
+        "build:publish": "npm run build && npm publish"
     },
     "devDependencies": {
         "@types/node": "^22.7.4",
