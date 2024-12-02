@@ -1,11 +1,12 @@
 import { isEither, left, right } from '@sweet-monads/either';
-import { z } from 'zod';
 import { ActionOptionsMap } from '../types';
-import { ActionReturnData, ApiClientOptions, CallFn } from './types';
+import { ApiClientOptions, CallFn } from './types';
 import { invokeWithRefreshing } from './utils';
 
 export const createApiClient =
-    <Schema extends ActionOptionsMap>(options: ApiClientOptions<Schema>) =>
+    <const Schema extends ActionOptionsMap>(
+        options: ApiClientOptions<Schema>,
+    ) =>
     <ActionName extends keyof Schema>(
         actionName: ActionName,
         refreshCredentialsIfUnauthorized: boolean = true,

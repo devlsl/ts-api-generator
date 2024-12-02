@@ -10,7 +10,9 @@ import { isEither, left, right } from '@sweet-monads/either';
 import { invokeWithRefreshing } from './utils';
 
 export const createReactUseApi =
-    <Schema extends ActionOptionsMap>(options: ApiClientOptions<Schema>) =>
+    <const Schema extends ActionOptionsMap>(
+        options: ApiClientOptions<Schema>,
+    ) =>
     <
         ActionName extends keyof Schema,
         Data = ActionReturnData<Schema[ActionName]>,

@@ -1,6 +1,7 @@
 import { ActionOptions } from './../types';
 import { Either } from '@sweet-monads/either';
 import { ActionOptionsMap } from '../types';
+import { z } from 'zod';
 
 export type ApiFetchState<Error, Data> =
     | {
@@ -32,7 +33,7 @@ export type ActionReturnData<Options extends ActionOptions> =
     undefined extends Options['return']
         ? undefined
         : // @ts-expect-error
-          z.infer<Schema[ActionName]['return']!>;
+          z.infer<Options['return']!>;
 
 export type CallFn<
     Options extends ActionOptions,
@@ -48,7 +49,7 @@ export type CallFn<
     ? () => Return
     : (
           // @ts-expect-error
-          payload: z.infer<Schema[ActionName]['payload']!>,
+          payload: z.infer<Options['payload']!>,
       ) => Return;
 
 export type ApiClientOptions<Schema extends ActionOptionsMap> = {
@@ -58,4 +59,13 @@ export type ApiClientOptions<Schema extends ActionOptionsMap> = {
     onError: (
         type: 'unauthorized' | 'requiredUnauthorized' | 'network',
     ) => void;
+};
+
+export type SchemaMapType<
+    SchemaMap extends Record<string, z.ZodTypeAny | undefined>,
+> = {
+    [Key in keyof SchemaMap]: undefined extends SchemaMap[Key]
+        ? undefined
+        : // @ts-expect-error
+          z.infer<SchemaMap[Key]>;
 };
