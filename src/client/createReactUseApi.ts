@@ -1,41 +1,28 @@
 import { useState } from 'react';
 import { ActionOptionsMap } from '../types';
-import { ApiCallReturn, ApiFetchState } from './types';
+import {
+    ActionReturnData,
+    ApiClientOptions,
+    ApiFetchState,
+    CallFn,
+} from './types';
 import { isEither, left, right } from '@sweet-monads/either';
 import { invokeWithRefreshing } from './utils';
 
 export const createReactUseApi =
-    <Config extends ActionOptionsMap>(
-        apiOrigin: string,
-        config: Config,
-        refreshActionName: keyof Config,
-        onError: (
-            type: 'unauthorized' | 'requiredUnauthorized' | 'network',
-        ) => void,
-    ) =>
+    <Schema extends ActionOptionsMap>(options: ApiClientOptions<Schema>) =>
     <
-        ActionName extends keyof Config,
-        Data = undefined extends Config[ActionName]['return']
-            ? undefined
-            : // @ts-expect-error
-              z.infer<Config[ActionName]['return']!>,
-        Return = Promise<
-            ApiCallReturn<
-                Config[ActionName]['errors'] extends readonly string[]
-                    ? Config[ActionName]['errors'][number]
-                    : undefined,
-                Data
-            >
-        >,
+        ActionName extends keyof Schema,
+        Data = ActionReturnData<Schema[ActionName]>,
     >(
         actionName: ActionName,
         refreshCredentialsIfUnauthorized: boolean = true,
     ) => {
-        const options = config[actionName];
+        const actionSchema = options.schema[actionName];
         const [fetchState, setFetchState] = useState<
             ApiFetchState<
-                Config[ActionName]['errors'] extends readonly string[]
-                    ? Config[ActionName]['errors'][number]
+                Schema[ActionName]['errors'] extends readonly string[]
+                    ? Schema[ActionName]['errors'][number]
                     : undefined,
                 Data
             >
@@ -49,11 +36,11 @@ export const createReactUseApi =
                 cash: prev.cash,
             }));
             const response = await invokeWithRefreshing(
-                apiOrigin,
+                options.apiOrigin,
                 actionName as string,
-                options,
+                actionSchema,
                 payload,
-                refreshActionName as string,
+                options.refreshActionName as string,
                 refreshCredentialsIfUnauthorized,
             );
             if (!isEither(response)) {
@@ -64,7 +51,7 @@ export const createReactUseApi =
                     cash: prev.cash,
                 }));
 
-                onError('network');
+                options.onError('network');
                 return left('NotLogicError');
             }
             if (response.isRight()) {
@@ -84,7 +71,7 @@ export const createReactUseApi =
                     cash: prev.cash,
                 }));
 
-                onError('unauthorized');
+                options.onError('unauthorized');
                 return left('NotLogicError');
             }
             if (response.value === 'RequiredUnauthorized') {
@@ -95,7 +82,7 @@ export const createReactUseApi =
                     cash: prev.cash,
                 }));
 
-                onError('requiredUnauthorized');
+                options.onError('requiredUnauthorized');
                 return left('NotLogicError');
             }
             if (response.value === 'NetworkError') {
@@ -106,7 +93,7 @@ export const createReactUseApi =
                     cash: prev.cash,
                 }));
 
-                onError('network');
+                options.onError('network');
                 return left('NotLogicError');
             }
 
@@ -118,12 +105,7 @@ export const createReactUseApi =
                 cash: null,
             });
             return left(response.value);
-        }) as undefined extends Config[ActionName]['payload']
-            ? () => Return
-            : (
-                  // @ts-expect-error
-                  payload: z.infer<Config[ActionName]['payload']!>,
-              ) => Return;
+        }) as CallFn<Schema[ActionName]>;
 
         return {
             ...fetchState,

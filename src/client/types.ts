@@ -1,4 +1,6 @@
+import { ActionOptions } from './../types';
 import { Either } from '@sweet-monads/either';
+import { ActionOptionsMap } from '../types';
 
 export type ApiFetchState<Error, Data> =
     | {
@@ -26,4 +28,34 @@ export type ApiFetchState<Error, Data> =
           cash: Data;
       };
 
-export type ApiCallReturn<Error, Data> = Either<Error | 'NotLogicError', Data>;
+export type ActionReturnData<Options extends ActionOptions> =
+    undefined extends Options['return']
+        ? undefined
+        : // @ts-expect-error
+          z.infer<Schema[ActionName]['return']!>;
+
+export type CallFn<
+    Options extends ActionOptions,
+    Return = Promise<
+        Either<
+            Options['errors'] extends readonly string[]
+                ? Options['errors'][number]
+                : undefined | 'NotLogicError',
+            ActionReturnData<Options>
+        >
+    >,
+> = undefined extends Options['payload']
+    ? () => Return
+    : (
+          // @ts-expect-error
+          payload: z.infer<Schema[ActionName]['payload']!>,
+      ) => Return;
+
+export type ApiClientOptions<Schema extends ActionOptionsMap> = {
+    apiOrigin: string;
+    schema: Schema;
+    refreshActionName: keyof Schema;
+    onError: (
+        type: 'unauthorized' | 'requiredUnauthorized' | 'network',
+    ) => void;
+};
