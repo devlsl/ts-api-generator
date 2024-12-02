@@ -1,0 +1,8 @@
+node_modules
+src
+.gitignore
+.prettierrc
+.package-lock.json
+tsconfig.cjs.json
+tsconfig.esm.json
+tsconfig.types.json
