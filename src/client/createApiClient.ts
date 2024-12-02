@@ -1,7 +1,8 @@
-import { Either, isEither, left, right } from '@sweet-monads/either';
-import { useState } from 'react';
+import { isEither, left, right } from '@sweet-monads/either';
 import { z } from 'zod';
-import { ActionOptions, ActionOptionsMap } from '../types';
+import { ActionOptionsMap } from '../types';
+import { ApiCallReturn } from './types';
+import { invokeWithRefreshing } from './utils';
 
 export const createApiClient =
     <Config extends ActionOptionsMap>(
@@ -19,7 +20,7 @@ export const createApiClient =
             : // @ts-expect-error
               z.infer<Config[ActionName]['return']!>,
         Return = Promise<
-            CallReturn<
+            ApiCallReturn<
                 Config[ActionName]['errors'] extends readonly string[]
                     ? Config[ActionName]['errors'][number]
                     : undefined,
